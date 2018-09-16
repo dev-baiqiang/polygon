@@ -10,13 +10,28 @@ polygon::Path polygon::Path::addPoint(Point p) {
 
 polygon::Path polygon::Path::build() {
     assert(this->ps.size() > 2);
+    if (this->style == polygon::Path::Style::kFill) {
+        return this->buildFill();
+    } else {
+        return this->buildStroke();
+    }
+}
+
+polygon::Path polygon::Path::buildFill() {
+    for (auto p : this->ps) {
+        this->vs.push_back({p.x, p.y});
+    }
+    return *this;
+}
+
+polygon::Path polygon::Path::buildStroke() {
 
     bool sharp = false;
     bool lastSharp = false;
     float halfWidth = this->strokeWidth / 2;
     unsigned int i;
 
-    if (!this->fill) {
+    if (this->style != Path::kStrokeAndFill) {
         this->is.push_back(0);
         this->is.push_back(1);
         this->is.push_back(3);
@@ -56,7 +71,7 @@ polygon::Path polygon::Path::build() {
         float tLen2 = halfWidth / glm::dot(tangent, nextNormal);
         auto t1 = next1 - tangent * tLen1;
         auto t2 = next1 - tangent * tLen2;
-        sharp = glm::dot(miter, currentNormal) > 0.65;
+        sharp = glm::dot(miter, currentNormal) > asin(0.25) * 2;
 
         if (sharp) {
             this->vs.push_back({m1.x, m1.y});
@@ -95,7 +110,7 @@ polygon::Path polygon::Path::build() {
         lastSharp = sharp;
     }
 
-    if (this->fill) {
+    if (this->style == Path::kStrokeAndFill) {
         return *this;
     }
     // Add last triangle

@@ -111,23 +111,29 @@ typedef glm::vec2 Point;
 
 void drawPath(polygon::Path path) {
     glBindVertexArray(VAO);
-    glBindVertexArray(VAO);
     glEnableVertexAttribArray(0);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, path.vs.size() * 2 * sizeof(float), &path.vs[0], GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, path.is.size() * sizeof(GLuint), &path.is[0], GL_DYNAMIC_DRAW);
-
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glDrawElements(GL_TRIANGLES, path.is.size() * sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
+
+    if (path.getStyle() == polygon::Path::kFill) {
+        glDrawArrays(GL_LINE_LOOP, 0, path.vs.size());
+    } else {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, path.is.size() * sizeof(GLuint), &path.is[0], GL_DYNAMIC_DRAW);
+
+        glDrawElements(GL_TRIANGLES, path.is.size() * sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
+    }
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
 }
 
 int main() {
+
+
     GLFWwindow *window = initWindow();
     initGL();
 
@@ -159,12 +165,14 @@ int main() {
     path3.build();
 
     polygon::Path path4(
-            {Point(500, 300), Point(600, 300), Point(600, 400), Point(500, 400)}, polygon::Path::Style::Stroke, 8.0f,
-            true);
+            {Point(500, 300), Point(600, 300), Point(600, 400), Point(500, 400)}, polygon::Path::kStrokeAndFill, 8.0f);
     path4.build();
 
-    auto polygonColor = glGetUniformLocation(program, "polygonColor");
+    polygon::Path path5(
+            {Point(500, 450), Point(600, 450), Point(600, 550), Point(500, 550)}, polygon::Path::kFill);
+    path5.build();
 
+    auto polygonColor = glGetUniformLocation(program, "polygonColor");
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
@@ -186,6 +194,10 @@ int main() {
 
         glUniform3f(polygonColor, 1, 0.5, value);
         drawPath(path4);
+
+        glUniform3f(polygonColor, 0.5, 0.5, value);
+        drawPath(path5);
+
         if (shot) {
             shot = 0;
             saveScreenShot(window, "screenshot.bmp");
