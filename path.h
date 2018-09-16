@@ -30,19 +30,23 @@ namespace polygon {
         std::vector<Point> ps;
         int style;
         float strokeWidth;
+        bool closed;
+
         Path buildFill();
+
         Path buildStroke();
+
     public:
         enum Style {
             kFill,
-            kStroke,
-            kStrokeAndFill
+            kStroke
         };
 
         explicit Path(std::vector<Point> ps, int style = Path::kStroke, float strokeWidth = 10.0f) {
             this->ps = std::move(ps);
             this->style = style;
             this->strokeWidth = strokeWidth;
+            this->closed = false;
         };
 
         Path addPoint(Point);
@@ -51,6 +55,10 @@ namespace polygon {
         std::vector<GLuint> is;
 
         Path build();
+
+        inline void close() {
+            this->closed = true;
+        };
 
         inline int getStyle() {
             return this->style;

@@ -165,11 +165,12 @@ int main() {
     path3.build();
 
     polygon::Path path4(
-            {Point(500, 300), Point(600, 300), Point(600, 400), Point(500, 400)}, polygon::Path::kStrokeAndFill, 8.0f);
+            {Point(500, 300), Point(600, 300), Point(600, 400), Point(500, 400)}, polygon::Path::kStroke, 8.0f);
+    path4.close();
     path4.build();
 
     polygon::Path path5(
-            {Point(500, 450), Point(600, 450), Point(600, 550), Point(500, 550)}, polygon::Path::kFill);
+            {Point(500, 450), Point(600, 550), Point(600, 450), Point(500, 550)}, polygon::Path::kFill);
     path5.build();
 
     auto polygonColor = glGetUniformLocation(program, "polygonColor");

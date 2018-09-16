@@ -31,7 +31,7 @@ polygon::Path polygon::Path::buildStroke() {
     float halfWidth = this->strokeWidth / 2;
     unsigned int i;
 
-    if (this->style != Path::kStrokeAndFill) {
+    if (!this->closed) {
         this->is.push_back(0);
         this->is.push_back(1);
         this->is.push_back(3);
@@ -110,7 +110,7 @@ polygon::Path polygon::Path::buildStroke() {
         lastSharp = sharp;
     }
 
-    if (this->style == Path::kStrokeAndFill) {
+    if (this->closed == true) {
         return *this;
     }
     // Add last triangle
