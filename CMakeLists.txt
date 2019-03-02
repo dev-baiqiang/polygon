@@ -44,7 +44,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}")
 set(STB_DIR "${LIB_DIR}/stb")
 target_include_directories(${PROJECT_NAME} PRIVATE "${STB_DIR}")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} "legacy_stdio_definitions.lib")
+IF (WIN32)
+    target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} "legacy_stdio_definitions.lib")
+ELSE ()
+    target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+ENDIF ()
 
 
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD

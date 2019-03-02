@@ -109,6 +109,42 @@ void initGL() {
 
 typedef glm::vec2 Point;
 
+void drawFill() {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glStencilMask(0xffffffff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_ALWAYS, 0, 0xffffffff);
+
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xff);
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_KEEP, GL_INCR_WRAP);
+    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_KEEP, GL_DECR_WRAP);
+
+    glDisable(GL_CULL_FACE);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glEnable(GL_CULL_FACE);
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    glStencilFunc(GL_NOTEQUAL, 0x0, 0xff);
+    glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+    glDisable(GL_STENCIL_TEST);
+
+    glDisable(GL_CULL_FACE);
+}
+
+
 void drawPath(polygon::Path path) {
     glBindVertexArray(VAO);
     glEnableVertexAttribArray(0);
@@ -117,68 +153,39 @@ void drawPath(polygon::Path path) {
     glBufferData(GL_ARRAY_BUFFER, path.vs.size() * 2 * sizeof(float), &path.vs[0], GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    if (path.getStyle() == polygon::Path::kFill) {
-        glDrawArrays(GL_LINE_LOOP, 0, path.vs.size());
+    if (path.style() == polygon::Path::kFill) {
+        drawFill();
     } else {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, path.is.size() * sizeof(GLuint), &path.is[0], GL_DYNAMIC_DRAW);
 
         glDrawElements(GL_TRIANGLES, path.is.size() * sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
 int main() {
 
-
     GLFWwindow *window = initWindow();
     initGL();
 
-    std::vector<Point> mPoints = {Point(50, 330), Point(250, 230), Point(350, 430), Point(50, 430), Point(50, 530),
-                                  Point(450, 330), Point(80, 230)};
+    std::vector<Point> mPoints = {Point(100, 100), Point(200, 200), Point(200, 100), Point(100, 200),
+                                  Point(200, 200), Point(200, 100), Point(100, 200), Point(100, 100),
+    };
 
-    polygon::Path path1(mPoints);
-    path1.addPoint(Point(550, 150));
+    polygon::Path path1(mPoints, polygon::Path::Style::kFill);
     path1.build();
 
-
-    polygon::Path path2({});
-    for (int i = 0; i < 9; i++) {
-        float x;
-        if (i % 2 == 0) {
-            x = 650;
-        } else {
-            x = 700;
-        }
-        float y = i * 50 + 150;
-        path2.addPoint({Point(x, y)});
-    }
-    path2.build();
-
-    polygon::Path path3(
-            {Point(30, 30), Point(130, 130), Point(230, 30), Point(330, 130), Point(430, 30), Point(530, 130)});
-    path3.addPoint({Point(630, 30)});
-    path3.addPoint({Point(730, 130)});
-    path3.build();
-
-    polygon::Path path4(
-            {Point(500, 300), Point(600, 300), Point(600, 400), Point(500, 400)}, polygon::Path::kStroke, 8.0f);
-    path4.close();
-    path4.build();
-
-    polygon::Path path5(
-            {Point(500, 450), Point(600, 550), Point(600, 450), Point(500, 550)}, polygon::Path::kFill);
-    path5.build();
 
     auto polygonColor = glGetUniformLocation(program, "polygonColor");
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         glClearColor(1, 1, 1, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         float timeValue = glfwGetTime();
         float value = sin(timeValue);
@@ -186,18 +193,6 @@ int main() {
 
         glUniform3f(polygonColor, 0, 1.0, value);
         drawPath(path1);
-
-        glUniform3f(polygonColor, 0.5, 0, value);
-        drawPath(path2);
-
-        glUniform3f(polygonColor, 0, 0.5, value);
-        drawPath(path3);
-
-        glUniform3f(polygonColor, 1, 0.5, value);
-        drawPath(path4);
-
-        glUniform3f(polygonColor, 0.5, 0.5, value);
-        drawPath(path5);
 
         if (shot) {
             shot = 0;

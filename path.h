@@ -20,17 +20,12 @@ namespace polygon {
 
     typedef glm::vec2 Point;
 
-    struct Vertex {
-        float x;
-        float y;
-    };
-
     class Path {
     private:
-        std::vector<Point> ps;
-        int style;
-        float strokeWidth;
-        bool closed;
+        std::vector<Point> mPs;
+        int mStyle;
+        float mStrokeWidth;
+        bool mClosed;
 
         Path buildFill();
 
@@ -42,26 +37,22 @@ namespace polygon {
             kStroke
         };
 
-        explicit Path(std::vector<Point> ps, int style = Path::kStroke, float strokeWidth = 10.0f) {
-            this->ps = std::move(ps);
-            this->style = style;
-            this->strokeWidth = strokeWidth;
-            this->closed = false;
-        };
+        explicit Path(std::vector<Point> &ps, int style = Path::kStroke, float strokeWidth = 10.0f) :
+                mPs(ps), mStyle(style), mStrokeWidth(strokeWidth), mClosed(false) {}
 
         Path addPoint(Point);
 
-        std::vector<Vertex> vs;
+        std::vector<Point> vs;
         std::vector<GLuint> is;
 
         Path build();
 
         inline void close() {
-            this->closed = true;
+            this->mClosed = true;
         };
 
-        inline int getStyle() {
-            return this->style;
+        inline int style() {
+            return this->mStyle;
         }
 
     };

@@ -4,13 +4,13 @@
 #include "path.h"
 
 polygon::Path polygon::Path::addPoint(Point p) {
-    this->ps.push_back(p);
+    this->mPs.push_back(p);
     return *this;
 }
 
 polygon::Path polygon::Path::build() {
-    assert(this->ps.size() > 2);
-    if (this->style == polygon::Path::Style::kFill) {
+    assert(this->mPs.size() > 2);
+    if (this->mStyle == polygon::Path::Style::kFill) {
         return this->buildFill();
     } else {
         return this->buildStroke();
@@ -18,9 +18,7 @@ polygon::Path polygon::Path::build() {
 }
 
 polygon::Path polygon::Path::buildFill() {
-    for (auto p : this->ps) {
-        this->vs.push_back({p.x, p.y});
-    }
+    this->vs = mPs;
     return *this;
 }
 
@@ -28,10 +26,10 @@ polygon::Path polygon::Path::buildStroke() {
 
     bool sharp = false;
     bool lastSharp = false;
-    float halfWidth = this->strokeWidth / 2;
+    float halfWidth = this->mStrokeWidth / 2;
     unsigned int i;
 
-    if (!this->closed) {
+    if (!this->mClosed) {
         this->is.push_back(0);
         this->is.push_back(1);
         this->is.push_back(3);
@@ -39,17 +37,17 @@ polygon::Path polygon::Path::buildStroke() {
         this->is.push_back(2);
         this->is.push_back(3);
     } else {
-        this->ps.push_back(this->ps[0]);
-        this->ps.push_back(this->ps[1]);
-        this->ps.push_back(this->ps[2]);
+        this->mPs.push_back(this->mPs[0]);
+        this->mPs.push_back(this->mPs[1]);
+        this->mPs.push_back(this->mPs[2]);
     }
 
-    int size = this->ps.size();
+    int size = this->mPs.size();
 
     for (i = 0; i < size - 2; ++i) {
-        Point current = this->ps[i];
-        Point next1 = this->ps[i + 1];
-        Point next2 = this->ps[i + 2];
+        Point current = this->mPs[i];
+        Point next1 = this->mPs[i + 1];
+        Point next2 = this->mPs[i + 2];
 
         glm::vec2 currentLine(next1 - current);
         auto currentNormal = glm::normalize(glm::vec2(-currentLine.y, currentLine.x));
@@ -110,7 +108,7 @@ polygon::Path polygon::Path::buildStroke() {
         lastSharp = sharp;
     }
 
-    if (this->closed == true) {
+    if (this->mClosed == true) {
         return *this;
     }
     // Add last triangle
