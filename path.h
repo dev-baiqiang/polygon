@@ -47,6 +47,8 @@ namespace polygon {
 
         Path build();
 
+        off_t fillOffset;
+
         inline void close() {
             this->mClosed = true;
         };

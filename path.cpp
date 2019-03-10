@@ -3,6 +3,10 @@
 
 #include "path.h"
 
+static float min(float a, float b) { return a < b ? a : b; }
+
+static float max(float a, float b) { return a > b ? a : b; }
+
 polygon::Path polygon::Path::addPoint(Point p) {
     this->mPs.push_back(p);
     return *this;
@@ -18,7 +22,22 @@ polygon::Path polygon::Path::build() {
 }
 
 polygon::Path polygon::Path::buildFill() {
+    fillOffset = mPs.size();
+    float v0 = 1e6f, v1 = 1e6f, v2 = -1e6f, v3 = -1e6f;
+
+    for (int i = 0; i < fillOffset; ++i) {
+        v0 = min(v0, mPs[i].x);
+        v1 = min(v1, mPs[i].y);
+        v2 = max(v2, mPs[i].x);
+        v3 = max(v3, mPs[i].y);
+    }
+
     this->vs = mPs;
+    this->vs.emplace_back(Point(v2, v3));
+    this->vs.emplace_back(Point(v2, v1));
+    this->vs.emplace_back(Point(v0, v3));
+    this->vs.emplace_back(Point(v0, v1));
+
     return *this;
 }
 

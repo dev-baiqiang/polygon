@@ -84,7 +84,7 @@ GLFWwindow *initWindow() {
 }
 
 void initGL() {
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glViewport(0, 0, WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
     glClearColor(1, 1, 1, 1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glDisable(GL_DEPTH_TEST);
@@ -109,18 +109,7 @@ void initGL() {
 
 typedef glm::vec2 Point;
 
-void drawFill() {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_SCISSOR_TEST);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glStencilMask(0xffffffff);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_ALWAYS, 0, 0xffffffff);
-
+void drawFill(polygon::Path &path) {
 
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0xff);
@@ -129,23 +118,19 @@ void drawFill() {
     glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_KEEP, GL_INCR_WRAP);
     glStencilOpSeparate(GL_BACK, GL_KEEP, GL_KEEP, GL_DECR_WRAP);
 
-    glDisable(GL_CULL_FACE);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glEnable(GL_CULL_FACE);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, path.fillOffset);
 
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     glStencilFunc(GL_NOTEQUAL, 0x0, 0xff);
     glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, path.fillOffset, 4);
     glDisable(GL_STENCIL_TEST);
-
-    glDisable(GL_CULL_FACE);
 }
 
 
-void drawPath(polygon::Path path) {
+void drawPath(polygon::Path &path) {
     glBindVertexArray(VAO);
     glEnableVertexAttribArray(0);
 
@@ -154,7 +139,7 @@ void drawPath(polygon::Path path) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     if (path.style() == polygon::Path::kFill) {
-        drawFill();
+        drawFill(path);
     } else {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, path.is.size() * sizeof(GLuint), &path.is[0], GL_DYNAMIC_DRAW);
@@ -172,9 +157,8 @@ int main() {
     GLFWwindow *window = initWindow();
     initGL();
 
-    std::vector<Point> mPoints = {Point(100, 100), Point(200, 200), Point(200, 100), Point(100, 200),
-                                  Point(200, 200), Point(200, 100), Point(100, 200), Point(100, 100),
-    };
+//    std::vector<Point> mPoints = {Point(100, 100), Point(100, 200), Point(200, 200),  Point(150, 150), Point(200, 100),};
+    std::vector<Point> mPoints = {Point(100, 100), Point(200, 200), Point(200, 100), Point(100, 200),};
 
     polygon::Path path1(mPoints, polygon::Path::Style::kFill);
     path1.build();
